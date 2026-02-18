@@ -1,0 +1,279 @@
+
+<div class="bg-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-8">
+  <div>
+    <h2 class="text-3xl font-bold text-white">Daily Summary</h2>
+    <p class="text-slate-400">{{ getFormattedDate() }}</p>
+  </div>
+
+  <!-- Macro Progress -->
+  <div class="space-y-8">
+    <!-- Main Calorie Display -->
+    <div class="flex flex-col items-center space-y-3">
+      <div class="relative w-40 h-40">
+        <svg class="w-full h-full" viewBox="0 0 36 36">
+          <path class="text-slate-700" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+          <path class="text-lime-400" stroke-width="3" [attr.stroke-dasharray]="caloriesProgress() + ', 100'" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span class="text-4xl font-bold text-white">{{ totals().calories | number:'1.0-0' }}</span>
+          <span class="text-sm text-slate-400">/ {{ goals().calories }} kcal</span>
+        </div>
+      </div>
+      <span class="text-lg font-semibold text-slate-300">Calories</span>
+    </div>
+    
+    <!-- Secondary Macros Grid -->
+    <div class="grid grid-cols-3 gap-4 pt-6 border-t border-slate-700/50">
+      <!-- Protein -->
+      <div class="flex flex-col items-center space-y-2">
+        <div class="relative w-24 h-24">
+          <svg class="w-full h-full" viewBox="0 0 36 36">
+            <path class="text-slate-700" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+            <path class="text-sky-400" stroke-width="4" [attr.stroke-dasharray]="proteinProgress() + ', 100'" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-xl font-bold text-white">{{ totals().protein | number:'1.0-0' }}g</span>
+            <span class="text-xs text-slate-400">/ {{ goals().protein }}g</span>
+          </div>
+        </div>
+        <span class="font-semibold text-slate-300">Protein</span>
+      </div>
+
+      <!-- Carbs -->
+      <div class="flex flex-col items-center space-y-2">
+        <div class="relative w-24 h-24">
+          <svg class="w-full h-full" viewBox="0 0 36 36">
+            <path class="text-slate-700" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+            <path class="text-amber-400" stroke-width="4" [attr.stroke-dasharray]="carbsProgress() + ', 100'" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-xl font-bold text-white">{{ totals().carbs | number:'1.0-0' }}g</span>
+            <span class="text-xs text-slate-400">/ {{ goals().carbs }}g</span>
+          </div>
+        </div>
+        <span class="font-semibold text-slate-300">Carbs</span>
+      </div>
+
+      <!-- Fat -->
+      <div class="flex flex-col items-center space-y-2">
+        <div class="relative w-24 h-24">
+          <svg class="w-full h-full" viewBox="0 0 36 36">
+            <path class="text-slate-700" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+            <path class="text-rose-400" stroke-width="4" [attr.stroke-dasharray]="fatProgress() + ', 100'" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-xl font-bold text-white">{{ totals().fat | number:'1.0-0' }}g</span>
+            <span class="text-xs text-slate-400">/ {{ goals().fat }}g</span>
+          </div>
+        </div>
+        <span class="font-semibold text-slate-300">Fat</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Food Log List -->
+  <div>
+    <h3 class="text-2xl font-bold text-white mb-4">Today's Log</h3>
+    <div class="space-y-6 max-h-[30rem] overflow-y-auto pr-2">
+      @if (hasItems()) {
+        @if (dailyLog()?.breakfast.length) {
+          <div class="animate-fade-in">
+            <h4 class="text-lg font-semibold text-lime-400 border-b-2 border-slate-700 pb-2 mb-3">Breakfast</h4>
+            <div class="space-y-3">
+              @for (item of dailyLog()!.breakfast; track item.id) {
+                <div class="bg-slate-700/50 rounded-lg transition-all duration-300">
+                  <div class="p-4 flex items-center justify-between">
+                    <div class="flex-grow cursor-pointer" (click)="toggleItemDetail(item.id)">
+                      <p class="font-semibold text-white">{{ item.name }}</p>
+                      <p class="text-sm text-slate-300">{{ item.calories | number:'1.0-0' }} kcal</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-sm text-right">
+                      <button (click)="onRemoveItem(item, 'Breakfast')" class="p-1.5 rounded-full text-slate-400 hover:bg-slate-600 hover:text-rose-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                  @if (expandedItemId() === item.id) {
+                    <div class="px-4 pb-3 border-t border-slate-600/50 text-xs animate-fade-in-fast">
+                      <div class="grid grid-cols-3 gap-x-4 pt-2 text-center">
+                        <div class="text-sky-300">
+                          <p class="font-bold text-base">{{ item.protein }}g</p>
+                          <p class="text-slate-400">Protein</p>
+                        </div>
+                        <div class="text-amber-300">
+                          <p class="font-bold text-base">{{ item.carbs }}g</p>
+                          <p class="text-slate-400">Carbs</p>
+                        </div>
+                        <div class="text-rose-300">
+                          <p class="font-bold text-base">{{ item.fat }}g</p>
+                          <p class="text-slate-400">Fat</p>
+                        </div>
+                      </div>
+                      @if (item.saturatedFat || item.fiber || item.sugar || item.sodium) {
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 pt-3 mt-2 border-t border-slate-700/50 text-slate-400">
+                          @if(item.saturatedFat) { <div class="truncate">Sat Fat: {{ item.saturatedFat }}g</div> }
+                          @if(item.fiber) { <div class="truncate">Fiber: {{ item.fiber }}g</div> }
+                          @if(item.sugar) { <div class="truncate">Sugar: {{ item.sugar }}g</div> }
+                          @if(item.sodium) { <div class="truncate">Sodium: {{ item.sodium }}mg</div> }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+        @if (dailyLog()?.lunch.length) {
+          <div class="animate-fade-in">
+            <h4 class="text-lg font-semibold text-lime-400 border-b-2 border-slate-700 pb-2 mb-3">Lunch</h4>
+            <div class="space-y-3">
+               @for (item of dailyLog()!.lunch; track item.id) {
+                <div class="bg-slate-700/50 rounded-lg transition-all duration-300">
+                  <div class="p-4 flex items-center justify-between">
+                    <div class="flex-grow cursor-pointer" (click)="toggleItemDetail(item.id)">
+                      <p class="font-semibold text-white">{{ item.name }}</p>
+                      <p class="text-sm text-slate-300">{{ item.calories | number:'1.0-0' }} kcal</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-sm text-right">
+                      <button (click)="onRemoveItem(item, 'Lunch')" class="p-1.5 rounded-full text-slate-400 hover:bg-slate-600 hover:text-rose-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                   @if (expandedItemId() === item.id) {
+                    <div class="px-4 pb-3 border-t border-slate-600/50 text-xs animate-fade-in-fast">
+                      <div class="grid grid-cols-3 gap-x-4 pt-2 text-center">
+                        <div class="text-sky-300">
+                          <p class="font-bold text-base">{{ item.protein }}g</p>
+                          <p class="text-slate-400">Protein</p>
+                        </div>
+                        <div class="text-amber-300">
+                          <p class="font-bold text-base">{{ item.carbs }}g</p>
+                          <p class="text-slate-400">Carbs</p>
+                        </div>
+                        <div class="text-rose-300">
+                          <p class="font-bold text-base">{{ item.fat }}g</p>
+                          <p class="text-slate-400">Fat</p>
+                        </div>
+                      </div>
+                      @if (item.saturatedFat || item.fiber || item.sugar || item.sodium) {
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 pt-3 mt-2 border-t border-slate-700/50 text-slate-400">
+                          @if(item.saturatedFat) { <div class="truncate">Sat Fat: {{ item.saturatedFat }}g</div> }
+                          @if(item.fiber) { <div class="truncate">Fiber: {{ item.fiber }}g</div> }
+                          @if(item.sugar) { <div class="truncate">Sugar: {{ item.sugar }}g</div> }
+                          @if(item.sodium) { <div class="truncate">Sodium: {{ item.sodium }}mg</div> }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+        @if (dailyLog()?.snack.length) {
+          <div class="animate-fade-in">
+            <h4 class="text-lg font-semibold text-lime-400 border-b-2 border-slate-700 pb-2 mb-3">Snack</h4>
+            <div class="space-y-3">
+               @for (item of dailyLog()!.snack; track item.id) {
+                <div class="bg-slate-700/50 rounded-lg transition-all duration-300">
+                  <div class="p-4 flex items-center justify-between">
+                    <div class="flex-grow cursor-pointer" (click)="toggleItemDetail(item.id)">
+                      <p class="font-semibold text-white">{{ item.name }}</p>
+                      <p class="text-sm text-slate-300">{{ item.calories | number:'1.0-0' }} kcal</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-sm text-right">
+                      <button (click)="onRemoveItem(item, 'Snack')" class="p-1.5 rounded-full text-slate-400 hover:bg-slate-600 hover:text-rose-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                   @if (expandedItemId() === item.id) {
+                    <div class="px-4 pb-3 border-t border-slate-600/50 text-xs animate-fade-in-fast">
+                      <div class="grid grid-cols-3 gap-x-4 pt-2 text-center">
+                        <div class="text-sky-300">
+                          <p class="font-bold text-base">{{ item.protein }}g</p>
+                          <p class="text-slate-400">Protein</p>
+                        </div>
+                        <div class="text-amber-300">
+                          <p class="font-bold text-base">{{ item.carbs }}g</p>
+                          <p class="text-slate-400">Carbs</p>
+                        </div>
+                        <div class="text-rose-300">
+                          <p class="font-bold text-base">{{ item.fat }}g</p>
+                          <p class="text-slate-400">Fat</p>
+                        </div>
+                      </div>
+                      @if (item.saturatedFat || item.fiber || item.sugar || item.sodium) {
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 pt-3 mt-2 border-t border-slate-700/50 text-slate-400">
+                          @if(item.saturatedFat) { <div class="truncate">Sat Fat: {{ item.saturatedFat }}g</div> }
+                          @if(item.fiber) { <div class="truncate">Fiber: {{ item.fiber }}g</div> }
+                          @if(item.sugar) { <div class="truncate">Sugar: {{ item.sugar }}g</div> }
+                          @if(item.sodium) { <div class="truncate">Sodium: {{ item.sodium }}mg</div> }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+        @if (dailyLog()?.dinner.length) {
+          <div class="animate-fade-in">
+            <h4 class="text-lg font-semibold text-lime-400 border-b-2 border-slate-700 pb-2 mb-3">Dinner</h4>
+            <div class="space-y-3">
+               @for (item of dailyLog()!.dinner; track item.id) {
+                <div class="bg-slate-700/50 rounded-lg transition-all duration-300">
+                  <div class="p-4 flex items-center justify-between">
+                    <div class="flex-grow cursor-pointer" (click)="toggleItemDetail(item.id)">
+                      <p class="font-semibold text-white">{{ item.name }}</p>
+                      <p class="text-sm text-slate-300">{{ item.calories | number:'1.0-0' }} kcal</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-sm text-right">
+                      <button (click)="onRemoveItem(item, 'Dinner')" class="p-1.5 rounded-full text-slate-400 hover:bg-slate-600 hover:text-rose-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                   @if (expandedItemId() === item.id) {
+                    <div class="px-4 pb-3 border-t border-slate-600/50 text-xs animate-fade-in-fast">
+                      <div class="grid grid-cols-3 gap-x-4 pt-2 text-center">
+                        <div class="text-sky-300">
+                          <p class="font-bold text-base">{{ item.protein }}g</p>
+                          <p class="text-slate-400">Protein</p>
+                        </div>
+                        <div class="text-amber-300">
+                          <p class="font-bold text-base">{{ item.carbs }}g</p>
+                          <p class="text-slate-400">Carbs</p>
+                        </div>
+                        <div class="text-rose-300">
+                          <p class="font-bold text-base">{{ item.fat }}g</p>
+                          <p class="text-slate-400">Fat</p>
+                        </div>
+                      </div>
+                      @if (item.saturatedFat || item.fiber || item.sugar || item.sodium) {
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 pt-3 mt-2 border-t border-slate-700/50 text-slate-400">
+                          @if(item.saturatedFat) { <div class="truncate">Sat Fat: {{ item.saturatedFat }}g</div> }
+                          @if(item.fiber) { <div class="truncate">Fiber: {{ item.fiber }}g</div> }
+                          @if(item.sugar) { <div class="truncate">Sugar: {{ item.sugar }}g</div> }
+                          @if(item.sodium) { <div class="truncate">Sodium: {{ item.sodium }}mg</div> }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      } @else {
+        <div class="text-center py-10 px-4 bg-slate-700/50 rounded-lg">
+          <p class="text-slate-400">No food logged for this day yet.</p>
+          <p class="text-slate-500 text-sm">Use the food logger to add your first meal!</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>

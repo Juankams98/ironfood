@@ -1,0 +1,175 @@
+
+<div class="bg-slate-800 rounded-t-2xl p-6 shadow-2xl border-t border-slate-700">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-2xl font-bold text-white">
+      @if (selectedMealType()) {
+        Log Your {{ selectedMealType() }}
+      } @else {
+        Log Your Meal
+      }
+    </h3>
+    <button (click)="cancel()" class="p-2 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+  
+  <input type="file" accept="image/*" class="hidden" #fileInput (change)="onFileSelected($event)">
+
+  @switch (status()) {
+    @case ('selectingMeal') {
+       <div class="animate-fade-in-fast">
+        <p class="text-slate-400 text-center mb-4">What meal are you logging?</p>
+        <div class="grid grid-cols-2 gap-3">
+          <button (click)="selectMealType('Breakfast')" class="p-4 bg-slate-700 rounded-lg text-white font-bold hover:bg-slate-600 transition-colors">Breakfast</button>
+          <button (click)="selectMealType('Lunch')" class="p-4 bg-slate-700 rounded-lg text-white font-bold hover:bg-slate-600 transition-colors">Lunch</button>
+          <button (click)="selectMealType('Snack')" class="p-4 bg-slate-700 rounded-lg text-white font-bold hover:bg-slate-600 transition-colors">Snack</button>
+          <button (click)="selectMealType('Dinner')" class="p-4 bg-slate-700 rounded-lg text-white font-bold hover:bg-slate-600 transition-colors">Dinner</button>
+        </div>
+       </div>
+    }
+    @case ('idle') {
+      <div class="animate-fade-in-fast">
+        <div class="flex items-center mb-4">
+          <button (click)="showMealSelection()" class="p-2 mr-2 rounded-full hover:bg-slate-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+          <p class="text-slate-400">Log instantly. Let AI do the hard work!</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button (click)="startCamera()" class="w-full bg-lime-500 text-slate-900 font-bold py-3 px-4 rounded-lg hover:bg-lime-400 transition-all duration-200 flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            Take Photo
+          </button>
+          <button (click)="fileInput.click()" class="w-full bg-slate-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-500 transition-all duration-200 flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            From Gallery
+          </button>
+        </div>
+        <div class="pt-3 text-center">
+          <button (click)="showSavedList()" class="text-lime-400 hover:text-lime-300 font-semibold text-sm">
+            Or add from your saved meals
+          </button>
+        </div>
+      </div>
+    }
+    @case ('savedList') {
+      <div class="animate-fade-in-fast">
+        <div class="flex items-center mb-4">
+          <button (click)="showIdle()" class="p-2 mr-2 rounded-full hover:bg-slate-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+          <h4 class="text-lg font-bold text-white">Your Saved Meals</h4>
+        </div>
+
+        @if (savedFoods().length) {
+          <div class="space-y-2 max-h-60 overflow-y-auto pr-2">
+            @for (food of savedFoods(); track food.id) {
+              <div class="bg-slate-700 p-3 rounded-md flex items-center justify-between animate-fade-in-fast">
+                <div>
+                  <p class="font-semibold text-white">{{ food.name }}</p>
+                  <p class="text-sm text-slate-300">{{ food.calories | number:'1.0-0' }} kcal &bull; P:{{food.protein}}g C:{{food.carbs}}g F:{{food.fat}}g</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0 pl-2">
+                  <button (click)="addSavedFoodToLog(food)" class="bg-lime-500 text-slate-900 text-xs font-bold py-1 px-3 rounded-full hover:bg-lime-400 transition-colors">ADD</button>
+                  <button (click)="removeSavedFood(food.id)" class="text-slate-400 hover:text-rose-400 p-1 rounded-full hover:bg-slate-600 transition-colors">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                      </svg>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="text-center text-slate-400 py-8">You have no saved meals yet. Save meals from the AI analysis to use them later!</p>
+        }
+      </div>
+    }
+    @case ('capturing') {
+      <div class="space-y-4 relative bg-slate-900 -m-6 rounded-t-2xl">
+        <video #videoElement autoplay playsinline class="w-full h-[60vh] object-cover rounded-t-2xl"></video>
+        <div class="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-x-12">
+            <button (click)="cancelCapture()" class="bg-white/20 backdrop-blur-sm text-white font-bold p-4 rounded-full hover:bg-white/30 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <button (click)="capturePhoto()" class="bg-lime-500 text-slate-900 p-5 rounded-full ring-4 ring-white/30 hover:bg-lime-400 transition-transform hover:scale-110">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
+             <div class="w-14 h-14"></div> <!-- Spacer to balance the cancel button -->
+        </div>
+      </div>
+    }
+    @case ('loading') {
+      <div class="text-center py-8 space-y-3">
+        <div class="flex justify-center items-center">
+          <div class="loader"></div>
+        </div>
+        <p class="text-slate-300 font-semibold animate-pulse">Analyzing your meal...</p>
+        <p class="text-sm text-slate-400">This might take a moment.</p>
+      </div>
+    }
+    @case ('error') {
+      <div class="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-4 rounded-lg text-center space-y-3">
+        <p class="font-semibold">Analysis Failed</p>
+        <p class="text-sm">{{ errorMessage() }}</p>
+        <button (click)="resetLogger()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">
+          Try Again
+        </button>
+      </div>
+    }
+    @case ('success') {
+      <div class="space-y-4 animate-fade-in-fast">
+        <h4 class="text-lg font-bold text-white">AI Analysis Results</h4>
+        @if (imagePreviewUrl()) {
+          <img [src]="imagePreviewUrl()" alt="Food preview" class="rounded-lg max-h-48 w-full object-cover" />
+        }
+        <div class="space-y-2 max-h-40 overflow-y-auto pr-2">
+            @for(food of analyzedFoods(); track food.name) {
+                <div class="bg-slate-700 p-3 rounded-md text-sm">
+                    <div class="flex justify-between items-start">
+                      <div class="flex-grow">
+                        <p class="font-bold text-slate-100">{{ food.name }}</p>
+                        <p class="text-slate-300">{{ food.calories | number:'1.0-0' }} kcal &bull; P:{{ food.protein }}g C:{{ food.carbs }}g F:{{ food.fat }}g</p>
+                      </div>
+                      <button (click)="saveFoodForLater(food)" [disabled]="justSavedItemNames().has(food.name)" class="p-2 rounded-full text-slate-400 hover:bg-slate-600 disabled:text-lime-400 disabled:cursor-not-allowed flex-shrink-0 ml-2">
+                        @if (justSavedItemNames().has(food.name)) {
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-3.13L5 18V4z" />
+                          </svg>
+                        } @else {
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                          </svg>
+                        }
+                      </button>
+                    </div>
+                    <div class="mt-2 pt-2 border-t border-slate-600 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-xs text-slate-400">
+                      @if(food.saturatedFat) { <div>Sat Fat: {{ food.saturatedFat }}g</div> }
+                      @if(food.fiber) { <div>Fiber: {{ food.fiber }}g</div> }
+                      @if(food.sugar) { <div>Sugar: {{ food.sugar }}g</div> }
+                      @if(food.sodium) { <div>Sodium: {{ food.sodium }}mg</div> }
+                  </div>
+                </div>
+            }
+        </div>
+        <div class="flex gap-3">
+          <button (click)="cancel()" class="w-full bg-slate-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-500 transition-colors">
+            Cancel
+          </button>
+          <button (click)="addAnalyzedFoodsToLog()" class="w-full bg-lime-500 text-slate-900 font-bold py-3 px-4 rounded-lg hover:bg-lime-400 transition-colors">
+            Add to Log
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>

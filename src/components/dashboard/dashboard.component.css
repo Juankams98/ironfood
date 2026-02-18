@@ -1,0 +1,5 @@
+
+/* All global animations are now in index.html */
+.animate-fade-in {
+  /* This class is now primarily a semantic hook, animation is global */
+}

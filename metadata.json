@@ -1,0 +1,7 @@
+{
+  "name": "IronFood",
+  "description": "A daily calorie and macro tracker for athletes. Log your meals, track your progress with a calendar view, and use AI to analyze food from photos.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

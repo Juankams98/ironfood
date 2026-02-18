@@ -1,0 +1,69 @@
+
+<div class="bg-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-8 animate-fade-in">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+       <button (click)="goBack()" class="p-2 rounded-full hover:bg-slate-700 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
+        <div>
+          <h2 class="text-3xl font-bold text-white">Your Profile</h2>
+          @if(currentUser(); as user) {
+            <p class="text-sm text-slate-400">{{ user.email }}</p>
+          }
+        </div>
+    </div>
+  </div>
+
+  <div class="border-t border-slate-700 pt-6">
+    <h3 class="text-xl font-semibold text-lime-400 mb-4">Daily Macro Goals</h3>
+    <p class="text-slate-400 mb-6">
+      Set your daily targets to accurately track your progress.
+    </p>
+
+    <form [formGroup]="goalsForm" (ngSubmit)="saveGoals()" class="space-y-4">
+      
+      <div>
+        <label for="calories" class="block text-sm font-medium text-slate-300">Calories (kcal)</label>
+        <input type="number" id="calories" formControlName="calories"
+               class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
+      </div>
+      
+      <div>
+        <label for="protein" class="block text-sm font-medium text-slate-300">Protein (g)</label>
+        <input type="number" id="protein" formControlName="protein"
+               class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
+      </div>
+      
+      <div>
+        <label for="carbs" class="block text-sm font-medium text-slate-300">Carbohydrates (g)</label>
+        <input type="number" id="carbs" formControlName="carbs"
+               class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
+      </div>
+      
+      <div>
+        <label for="fat" class="block text-sm font-medium text-slate-300">Fat (g)</label>
+        <input type="number" id="fat" formControlName="fat"
+               class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
+      </div>
+
+      <div class="pt-4 flex justify-end items-center gap-4">
+        @if (saveStatus() === 'saved') {
+          <span class="text-lime-400 text-sm animate-fade-in-fast">Goals Saved!</span>
+        }
+        <button type="submit" [disabled]="!goalsForm.valid"
+                class="bg-lime-500 text-slate-900 font-bold py-2 px-6 rounded-lg hover:bg-lime-400 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors duration-200">
+          Save Goals
+        </button>
+      </div>
+
+    </form>
+  </div>
+  
+  <div class="border-t border-slate-700 pt-6 flex justify-center">
+    <button (click)="logout()" class="text-rose-400 hover:text-rose-300 font-semibold text-sm transition-colors">
+      Sign Out
+    </button>
+  </div>
+</div>

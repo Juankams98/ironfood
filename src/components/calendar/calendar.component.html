@@ -1,0 +1,43 @@
+
+<div class="bg-slate-800 rounded-2xl p-6 shadow-2xl">
+  <div class="flex items-center justify-between mb-4">
+    <button (click)="previousMonth()" class="p-2 rounded-full hover:bg-slate-700 transition-colors duration-200">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="text-xl font-bold text-white text-center">
+      {{ monthNames[currentMonth] }} {{ currentYear }}
+    </h3>
+    <button (click)="nextMonth()" class="p-2 rounded-full hover:bg-slate-700 transition-colors duration-200">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  </div>
+  <div class="grid grid-cols-7 gap-1 text-center text-sm text-slate-400 mb-2">
+    <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+  </div>
+  <div class="grid grid-cols-7 gap-1">
+    @for (week of weeks; track week) {
+      @for (day of week; track day) {
+        <div class="flex justify-center items-center">
+          <button 
+            (click)="selectDate(day)"
+            class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+            [class.text-slate-500]="day.getMonth() !== currentMonth"
+            [class.text-white]="day.getMonth() === currentMonth"
+            [class.bg-lime-500]="isSameDay(day, selectedDate())"
+            [class.text-slate-900]="isSameDay(day, selectedDate())"
+            [class.font-bold]="isSameDay(day, selectedDate())"
+            [class.hover:bg-slate-700]="!isSameDay(day, selectedDate()) && day.getMonth() === currentMonth"
+            [class.ring-2]="isToday(day)"
+            [class.ring-lime-400]="isToday(day)"
+          >
+            {{ day.getDate() }}
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

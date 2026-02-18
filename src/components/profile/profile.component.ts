@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-profile',
+  standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './profile.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

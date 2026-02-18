@@ -6,6 +6,7 @@ import { FoodItem, MealType } from '../../models/app.models';
 
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],

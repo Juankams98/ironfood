@@ -11,6 +11,7 @@ import { AuthComponent } from './components/auth/auth.component';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [

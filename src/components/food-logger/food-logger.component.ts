@@ -9,6 +9,7 @@ type LoggerState = 'selectingMeal' | 'idle' | 'capturing' | 'loading' | 'success
 
 @Component({
   selector: 'app-food-logger',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './food-logger.component.html',
   styleUrls: ['./food-logger.component.css'],

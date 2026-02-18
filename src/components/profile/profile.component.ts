@@ -1,5 +1,5 @@
 
-import { Component, ChangeDetectionStrategy, inject, output, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DataService } from '../../services/data.service';
@@ -20,6 +20,7 @@ export class ProfileComponent {
   currentUser = this.authService.currentUser;
   closeProfile = output<void>();
   saveStatus = signal<'idle' | 'saved'>('idle');
+  userGoals = this.dataService.userGoals;
 
   goalsForm = this.fb.group({
     calories: [0, [Validators.required, Validators.min(0)]],
@@ -29,7 +30,9 @@ export class ProfileComponent {
   });
 
   constructor() {
-    this.goalsForm.patchValue(this.dataService.userGoals());
+    effect(() => {
+        this.goalsForm.patchValue(this.userGoals(), { emitEvent: false });
+    });
   }
 
   saveGoals() {

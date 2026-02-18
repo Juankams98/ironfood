@@ -7,7 +7,7 @@ export interface User {
 }
 
 export interface FoodItem {
-  id: string;
+  id?: string;
   name: string;
   calories: number;
   protein: number;

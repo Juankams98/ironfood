@@ -174,8 +174,10 @@ export class FoodLoggerComponent implements OnDestroy {
     });
   }
 
-  removeSavedFood(itemId: string) {
-    this.dataService.removeSavedFoodItem(itemId);
+  removeSavedFood(itemId: string | undefined) {
+    if (itemId) {
+      this.dataService.removeSavedFoodItem(itemId);
+    }
   }
 
   showSavedList() {

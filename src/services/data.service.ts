@@ -2,12 +2,8 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { DayLog, FoodItem, MealType } from '../models/app.models';
 import { AuthService } from './auth.service';
-
-interface UserData {
-  logs: [string, DayLog][];
-  savedFoods: FoodItem[];
-  goals: { calories: number; protein: number; carbs: number; fat: number; };
-}
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { supabaseConfig } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +11,7 @@ interface UserData {
 export class DataService {
   private authService = inject(AuthService);
   private currentUser = this.authService.currentUser;
+  private supabase: SupabaseClient;
 
   private logs = signal<Map<string, DayLog>>(new Map());
   private _savedFoods = signal<FoodItem[]>([]);
@@ -24,47 +21,111 @@ export class DataService {
   public readonly userGoals = this._userGoals.asReadonly();
 
   constructor() {
+    this.supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey);
+    
     effect(() => {
       const user = this.currentUser();
       if (user) {
-        this.loadUserData(user.id);
+        this.loadInitialUserData(user.id);
       } else {
         this.clearUserData();
       }
     });
   }
 
-  private getUserDataKey(userId: string): string {
-    return `ironfood_userdata_${userId}`;
+  private async loadInitialUserData(userId: string): Promise<void> {
+    await Promise.all([
+      this.loadGoals(userId),
+      this.loadSavedFoods(userId),
+      this.loadLogForDate(new Date()) // Pre-load today's data
+    ]);
   }
+  
+  private async loadGoals(userId: string): Promise<void> {
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select('calories_goal, protein_goal, carbs_goal, fat_goal')
+      .eq('user_id', userId)
+      .single();
 
-  private loadUserData(userId: string): void {
-    const dataKey = this.getUserDataKey(userId);
-    const storedData = localStorage.getItem(dataKey);
-
-    if (storedData) {
-      const data: UserData = JSON.parse(storedData);
-      this.logs.set(new Map(data.logs));
-      this._savedFoods.set(data.savedFoods || []);
-      this._userGoals.set(data.goals || { calories: 2500, protein: 180, carbs: 250, fat: 70 });
-    } else {
-      // New user, set defaults
-      this.clearUserData(); // Clear any previous state
-      this.initializeNewUserData(userId);
+    if (data) {
+      this._userGoals.set({
+        calories: data.calories_goal,
+        protein: data.protein_goal,
+        carbs: data.carbs_goal,
+        fat: data.fat_goal
+      });
+    } else if (error) {
+      console.error('Error fetching user goals:', error);
     }
   }
 
-  private saveUserData(): void {
+  private async loadSavedFoods(userId: string): Promise<void> {
+    const { data, error } = await this.supabase
+      .from('saved_foods')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (data) {
+      const saved: FoodItem[] = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        calories: item.calories,
+        protein: item.protein,
+        carbs: item.carbs,
+        fat: item.fat,
+        saturatedFat: item.saturated_fat,
+        fiber: item.fiber,
+        sugar: item.sugar,
+        sodium: item.sodium,
+      }));
+      this._savedFoods.set(saved);
+    } else if (error) {
+        console.error("Error fetching saved foods:", error);
+    }
+  }
+  
+  async loadLogForDate(date: Date) {
+    const dateString = this.formatDate(date);
     const user = this.currentUser();
     if (!user) return;
+    if (this.logs().has(dateString)) return; // Already loaded
 
-    const data: UserData = {
-      logs: Array.from(this.logs().entries()),
-      savedFoods: this.savedFoods(),
-      goals: this.userGoals()
-    };
-    
-    localStorage.setItem(this.getUserDataKey(user.id), JSON.stringify(data));
+    const { data, error } = await this.supabase
+      .from('food_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('log_date', dateString);
+      
+    if (data) {
+      const newLog: DayLog = {
+          date: dateString,
+          breakfast: [], lunch: [], snack: [], dinner: []
+      };
+      
+      for(const item of data) {
+          const foodItem: FoodItem = {
+              id: item.id,
+              name: item.name,
+              calories: item.calories, protein: item.protein, carbs: item.carbs, fat: item.fat,
+              saturatedFat: item.saturated_fat, fiber: item.fiber, sugar: item.sugar, sodium: item.sodium
+          };
+          const mealKey = item.meal_type.toLowerCase() as keyof Omit<DayLog, 'date'>;
+          if (newLog[mealKey]) {
+            newLog[mealKey].push(foodItem);
+          }
+      }
+      this.logs.update(currentLogs => new Map(currentLogs.set(dateString, newLog)));
+
+    } else if(error) {
+        console.error(`Error fetching log for ${dateString}:`, error);
+    } else {
+      // No data, set an empty log to prevent re-fetching
+      this.logs.update(currentLogs => new Map(currentLogs.set(dateString, {
+          date: dateString,
+          breakfast: [], lunch: [], snack: [], dinner: []
+      })));
+    }
   }
 
   private clearUserData(): void {
@@ -73,83 +134,130 @@ export class DataService {
     this._userGoals.set({ calories: 2500, protein: 180, carbs: 250, fat: 70 });
   }
 
-  private initializeNewUserData(userId: string): void {
-    // Add some mock data for a new user
-    const today = this.formatDate(new Date());
-    const initialLog: DayLog = {
-      date: today,
-      breakfast: [
-        { id: '1', name: 'Welcome Shake', calories: 250, protein: 40, carbs: 10, fat: 5, sugar: 5, sodium: 150 },
-      ],
-      lunch: [],
-      snack: [],
-      dinner: []
-    };
-    this.logs.set(new Map([[today, initialLog]]));
-    this._savedFoods.set([
-      { id: 'sv1', name: 'Quick Protein Oats', calories: 400, protein: 30, carbs: 55, fat: 8, fiber: 9, sugar: 10 },
-    ]);
-    this.saveUserData();
-  }
-
   getLogForDate(date: Date) {
     const dateString = this.formatDate(date);
     return computed(() => this.logs().get(dateString));
   }
   
-  updateGoals(newGoals: { calories: number; protein: number; carbs: number; fat: number; }) {
+  async updateGoals(newGoals: { calories: number; protein: number; carbs: number; fat: number; }) {
+    const user = this.currentUser();
+    if (!user) return;
+
     this._userGoals.set(newGoals);
-    this.saveUserData();
+    
+    const { error } = await this.supabase
+      .from('profiles')
+      .update({ 
+        calories_goal: newGoals.calories,
+        protein_goal: newGoals.protein,
+        carbs_goal: newGoals.carbs,
+        fat_goal: newGoals.fat
+      })
+      .eq('user_id', user.id);
+      
+    if (error) console.error("Error updating goals:", error);
   }
 
-  saveFoodItem(foodToSave: Omit<FoodItem, 'id'>) {
-    this._savedFoods.update(currentSaved => {
-      if (currentSaved.some(item => item.name.toLowerCase() === foodToSave.name.toLowerCase())) {
-        return currentSaved;
-      }
-      const newSavedItem: FoodItem = { ...foodToSave, id: crypto.randomUUID() };
-      return [...currentSaved, newSavedItem];
-    });
-    this.saveUserData();
+  async saveFoodItem(foodToSave: Omit<FoodItem, 'id'>) {
+    const user = this.currentUser();
+    if (!user) return;
+    
+    if (this.savedFoods().some(item => item.name.toLowerCase() === foodToSave.name.toLowerCase())) {
+      return;
+    }
+    
+    const { data, error } = await this.supabase
+      .from('saved_foods')
+      .insert({
+        user_id: user.id,
+        name: foodToSave.name,
+        calories: foodToSave.calories,
+        protein: foodToSave.protein,
+        carbs: foodToSave.carbs,
+        fat: foodToSave.fat,
+        saturated_fat: foodToSave.saturatedFat,
+        fiber: foodToSave.fiber,
+        sugar: foodToSave.sugar,
+        sodium: foodToSave.sodium
+      })
+      .select()
+      .single();
+
+    if (data) {
+      const newSavedItem: FoodItem = { ...foodToSave, id: data.id };
+      this._savedFoods.update(currentSaved => [...currentSaved, newSavedItem]);
+    } else if (error) {
+      console.error("Error saving food item:", error);
+    }
   }
 
-  removeSavedFoodItem(itemId: string) {
+  async removeSavedFoodItem(itemId: string) {
     this._savedFoods.update(currentSaved => currentSaved.filter(item => item.id !== itemId));
-    this.saveUserData();
+    
+    const { error } = await this.supabase
+      .from('saved_foods')
+      .delete()
+      .eq('id', itemId);
+      
+    if (error) console.error("Error removing saved food:", error);
   }
 
-  addFoodItems(date: Date, newItems: Omit<FoodItem, 'id'>[], mealType: MealType) {
-    this.logs.update(currentLogs => {
-      const dateString = this.formatDate(date);
-      const dayLog = currentLogs.get(dateString) || {
-        date: dateString,
-        breakfast: [], lunch: [], snack: [], dinner: [],
-      };
-      
-      const itemsToAdd: FoodItem[] = newItems.map(item => ({ ...item, id: crypto.randomUUID() }));
-      const mealKey = mealType.toLowerCase() as keyof Omit<DayLog, 'date'>;
-      
-      const updatedLog = { ...dayLog, [mealKey]: [...dayLog[mealKey], ...itemsToAdd] };
-      currentLogs.set(dateString, updatedLog);
-      return new Map(currentLogs);
-    });
-    this.saveUserData();
+  async addFoodItems(date: Date, newItems: Omit<FoodItem, 'id'>[], mealType: MealType) {
+    const user = this.currentUser();
+    if (!user) return;
+
+    const itemsToInsert = newItems.map(item => ({
+        user_id: user.id,
+        log_date: this.formatDate(date),
+        meal_type: mealType,
+        name: item.name,
+        calories: item.calories,
+        protein: item.protein,
+        carbs: item.carbs,
+        fat: item.fat,
+        saturated_fat: item.saturatedFat,
+        fiber: item.fiber,
+        sugar: item.sugar,
+        sodium: item.sodium
+    }));
+    
+    const { data, error } = await this.supabase
+      .from('food_logs')
+      .insert(itemsToInsert)
+      .select();
+
+    if (data) {
+      // Refetch the log for the day to ensure consistency
+      this.loadLogForDate(date);
+    } else if (error) {
+      console.error("Error adding food items:", error);
+    }
   }
   
-  removeFoodItem(date: Date, itemId: string, mealType: MealType) {
+  async removeFoodItem(date: Date, itemId: string, mealType: MealType) {
+    // Optimistic update
+    const dateString = this.formatDate(date);
     this.logs.update(currentLogs => {
-      const dateString = this.formatDate(date);
       const dayLog = currentLogs.get(dateString);
-
       if (dayLog) {
-        const mealKey = mealType.toLowerCase() as keyof Omit<DayLog, 'date'>;
-        const updatedItems = dayLog[mealKey].filter(item => item.id !== itemId);
-        const updatedLog = { ...dayLog, [mealKey]: updatedItems };
-        currentLogs.set(dateString, updatedLog);
+          const mealKey = mealType.toLowerCase() as keyof Omit<DayLog, 'date'>;
+          const updatedItems = dayLog[mealKey].filter(item => item.id !== itemId);
+          const updatedLog = { ...dayLog, [mealKey]: updatedItems };
+          currentLogs.set(dateString, updatedLog);
       }
       return new Map(currentLogs);
     });
-    this.saveUserData();
+
+    const { error } = await this.supabase
+      .from('food_logs')
+      .delete()
+      .eq('id', itemId);
+      
+    if (error) {
+      console.error("Error removing food item:", error);
+      // Revert optimistic update if there was an error
+      this.loadLogForDate(date);
+    }
   }
 
   private formatDate(date: Date): string {

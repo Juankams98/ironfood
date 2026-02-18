@@ -1,5 +1,5 @@
 
-import { Component, ChangeDetectionStrategy, input, computed, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data.service';
 import { FoodItem, MealType } from '../../models/app.models';
@@ -18,6 +18,13 @@ export class DashboardComponent {
   
   dailyLog = computed(() => this.dataService.getLogForDate(this.displayDate())());
   expandedItemId = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+        // When the input date changes, trigger a data load for that date.
+        this.dataService.loadLogForDate(this.displayDate());
+    });
+  }
 
   totals = computed(() => {
     const log = this.dailyLog();
@@ -69,10 +76,13 @@ export class DashboardComponent {
   }
 
   onRemoveItem(item: FoodItem, mealType: MealType) {
-    this.dataService.removeFoodItem(this.displayDate(), item.id, mealType);
+    if (item.id) {
+        this.dataService.removeFoodItem(this.displayDate(), item.id, mealType);
+    }
   }
 
-  toggleItemDetail(itemId: string) {
+  toggleItemDetail(itemId: string | undefined) {
+    if (!itemId) return;
     this.expandedItemId.update(currentId => currentId === itemId ? null : itemId);
   }
 }

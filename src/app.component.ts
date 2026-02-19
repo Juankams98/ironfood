@@ -1,4 +1,3 @@
-
 import { Component, signal, inject } from '@angular/core';
 import { ChangeDetectionStrategy } from '@angular/core';
 import { CalendarComponent } from './components/calendar/calendar.component';
@@ -8,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { ProfileComponent } from './components/profile/profile.component';
 import { AuthService } from './services/auth.service';
 import { AuthComponent } from './components/auth/auth.component';
+import { PwaService } from './services/pwa.service';
 
 @Component({
   selector: 'app-root',
@@ -25,7 +25,9 @@ import { AuthComponent } from './components/auth/auth.component';
 })
 export class AppComponent {
   private authService = inject(AuthService);
+  private pwaService = inject(PwaService);
   currentUser = this.authService.currentUser;
+  canInstall = this.pwaService.canInstall;
   
   title = 'IronFood';
   selectedDate = signal(new Date());
@@ -47,5 +49,9 @@ export class AppComponent {
 
   closeLogger() {
     this.isLoggerOpen.set(false);
+  }
+
+  promptInstall() {
+    this.pwaService.promptInstall();
   }
 }

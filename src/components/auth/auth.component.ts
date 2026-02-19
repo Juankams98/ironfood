@@ -1,4 +1,3 @@
-
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -15,7 +14,7 @@ export class AuthComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
 
-  authView = signal<'login' | 'register'>('login');
+  authView = signal<'login' | 'register' | 'registered'>('login');
   errorMessage = signal<string | null>(null);
   isLoading = signal(false);
 
@@ -29,7 +28,7 @@ export class AuthComponent {
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
-  switchTo(view: 'login' | 'register') {
+  switchTo(view: 'login' | 'register' | 'registered') {
     this.authView.set(view);
     this.errorMessage.set(null);
   }
@@ -57,6 +56,7 @@ export class AuthComponent {
     const { email, password } = this.registerForm.value;
     try {
       await this.authService.register(email!, password!);
+      this.authView.set('registered');
     } catch (error: any) {
       this.errorMessage.set(error.message);
     } finally {

@@ -1,4 +1,3 @@
-
 <div class="flex items-center justify-center min-h-[80vh] px-4">
   <div class="w-full max-w-md space-y-8">
     
@@ -7,77 +6,97 @@
         Iron<span class="text-white">Food</span>
       </h1>
       <h2 class="mt-2 text-center text-xl tracking-tight text-slate-300">
-        @if (authView() === 'login') {
-          Sign in to your account
-        } @else {
-          Create a new account
+        @switch (authView()) {
+          @case ('login') { Sign in to your account }
+          @case ('register') { Create a new account }
+          @case ('registered') { One last step... }
         }
       </h2>
     </div>
 
-    @if (authView() === 'login') {
-      <form [formGroup]="loginForm" (ngSubmit)="handleLogin()" class="space-y-6 bg-slate-800 p-8 rounded-2xl shadow-2xl">
-        <div>
-          <label for="login-email" class="block text-sm font-medium text-slate-300">Email address</label>
-          <input id="login-email" type="email" formControlName="email" required
-                 class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
-        </div>
-        <div>
-          <label for="login-password" class="block text-sm font-medium text-slate-300">Password</label>
-          <input id="login-password" type="password" formControlName="password" required
-                 class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
-        </div>
-        
-        @if (errorMessage()) {
-          <div class="bg-rose-500/20 text-rose-300 text-sm p-3 rounded-md text-center">
-            {{ errorMessage() }}
+    @switch (authView()) {
+      @case ('login') {
+        <form [formGroup]="loginForm" (ngSubmit)="handleLogin()" class="space-y-6 bg-slate-800 p-8 rounded-2xl shadow-2xl animate-fade-in-fast">
+          <div>
+            <label for="login-email" class="block text-sm font-medium text-slate-300">Email address</label>
+            <input id="login-email" type="email" formControlName="email" required
+                  class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
           </div>
-        }
-        
-        <div>
-          <button type="submit" [disabled]="loginForm.invalid || isLoading()"
-                  class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-lime-500 hover:bg-lime-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-lime-500 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors">
-            {{ isLoading() ? 'Signing in...' : 'Sign in' }}
+          <div>
+            <label for="login-password" class="block text-sm font-medium text-slate-300">Password</label>
+            <input id="login-password" type="password" formControlName="password" required
+                  class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
+          </div>
+          
+          @if (errorMessage()) {
+            <div class="bg-rose-500/20 text-rose-300 text-sm p-3 rounded-md text-center">
+              {{ errorMessage() }}
+            </div>
+          }
+          
+          <div>
+            <button type="submit" [disabled]="loginForm.invalid || isLoading()"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-lime-500 hover:bg-lime-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-lime-500 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors">
+              {{ isLoading() ? 'Signing in...' : 'Sign in' }}
+            </button>
+          </div>
+          <p class="text-center text-sm text-slate-400">
+            Don't have an account? 
+            <button type="button" (click)="switchTo('register')" class="font-medium text-lime-400 hover:text-lime-300">Sign up</button>
+          </p>
+        </form>
+      }
+      @case ('register') {
+        <form [formGroup]="registerForm" (ngSubmit)="handleRegister()" class="space-y-6 bg-slate-800 p-8 rounded-2xl shadow-2xl animate-fade-in-fast">
+          <div>
+            <label for="register-email" class="block text-sm font-medium text-slate-300">Email address</label>
+            <input id="register-email" type="email" formControlName="email" required
+                  class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
+          </div>
+          <div>
+            <label for="register-password" class="block text-sm font-medium text-slate-300">Password</label>
+            <input id="register-password" type="password" formControlName="password" required
+                  class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
+              @if(registerForm.get('password')?.hasError('minlength')) {
+                  <p class="text-xs text-rose-400 mt-1">Password must be at least 6 characters.</p>
+              }
+          </div>
+
+          @if (errorMessage()) {
+            <div class="bg-rose-500/20 text-rose-300 text-sm p-3 rounded-md text-center">
+              {{ errorMessage() }}
+            </div>
+          }
+
+          <div>
+            <button type="submit" [disabled]="registerForm.invalid || isLoading()"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-lime-500 hover:bg-lime-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-lime-500 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors">
+              {{ isLoading() ? 'Creating account...' : 'Create account' }}
+            </button>
+          </div>
+          <p class="text-center text-sm text-slate-400">
+            Already have an account? 
+            <button type="button" (click)="switchTo('login')" class="font-medium text-lime-400 hover:text-lime-300">Sign in</button>
+          </p>
+        </form>
+      }
+      @case ('registered') {
+        <div class="space-y-6 bg-slate-800 p-8 rounded-2xl shadow-2xl text-center animate-fade-in">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-lime-500/20">
+              <svg class="h-6 w-6 text-lime-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-white">Check your inbox</h3>
+          <p class="text-slate-300">
+            We've sent a confirmation link to your email. Please click the link to finish setting up your account.
+          </p>
+          <button type="button" (click)="switchTo('login')" 
+                  class="w-full flex justify-center py-2 px-4 border-slate-600 border rounded-md shadow-sm text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors">
+            Back to Sign In
           </button>
         </div>
-        <p class="text-center text-sm text-slate-400">
-          Don't have an account? 
-          <button type="button" (click)="switchTo('register')" class="font-medium text-lime-400 hover:text-lime-300">Sign up</button>
-        </p>
-      </form>
-    } @else {
-      <form [formGroup]="registerForm" (ngSubmit)="handleRegister()" class="space-y-6 bg-slate-800 p-8 rounded-2xl shadow-2xl">
-        <div>
-          <label for="register-email" class="block text-sm font-medium text-slate-300">Email address</label>
-          <input id="register-email" type="email" formControlName="email" required
-                 class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
-        </div>
-        <div>
-          <label for="register-password" class="block text-sm font-medium text-slate-300">Password</label>
-          <input id="register-password" type="password" formControlName="password" required
-                 class="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-lime-500 focus:border-lime-500 sm:text-sm">
-             @if(registerForm.get('password')?.hasError('minlength')) {
-                <p class="text-xs text-rose-400 mt-1">Password must be at least 6 characters.</p>
-             }
-        </div>
-
-        @if (errorMessage()) {
-          <div class="bg-rose-500/20 text-rose-300 text-sm p-3 rounded-md text-center">
-            {{ errorMessage() }}
-          </div>
-        }
-
-        <div>
-          <button type="submit" [disabled]="registerForm.invalid || isLoading()"
-                  class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-lime-500 hover:bg-lime-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-lime-500 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors">
-             {{ isLoading() ? 'Creating account...' : 'Create account' }}
-          </button>
-        </div>
-        <p class="text-center text-sm text-slate-400">
-          Already have an account? 
-          <button type="button" (click)="switchTo('login')" class="font-medium text-lime-400 hover:text-lime-300">Sign in</button>
-        </p>
-      </form>
+      }
     }
   </div>
 </div>
